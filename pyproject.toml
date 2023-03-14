@@ -1,0 +1,18 @@
+[tool.poetry]
+name = "comprehension_cleaner"
+version = "0.1.0"
+description = "Check your code for unnesessary list comprehensions"
+authors = ["Alex <42418433+aiexz@users.noreply.github.com>"]
+readme = "README.md"
+license = "MIT"
+
+
+[tool.poetry.dependencies]
+python = "^3.10"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.scripts]
+compcleaner = "comprehension_cleaner.__main__:main"
