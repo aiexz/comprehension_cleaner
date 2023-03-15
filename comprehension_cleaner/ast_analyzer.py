@@ -17,21 +17,21 @@ class Analysis:
 
     def analyze_nodes(self, nodes: typing.Union[typing.List[ast.AST], typing.Iterator[ast.AST]]):
         def is_self(x: ast.expr):
-            return isinstance(x, ast.Attribute) and isinstance(x.value, ast.Name) and x.value.id == 'self'
+            return isinstance(x, ast.Attribute) and isinstance(x.value, ast.Name) and x.value.id
 
         for subnode in nodes:
             if isinstance(subnode, ast.Assign) and isinstance(subnode.value, ast.ListComp) and isinstance(
                     subnode.targets[0], (ast.Attribute, ast.Name)):
                 if is_self(subnode.targets[0]):
-                    self.found[self.class_context + f".self.{subnode.targets[0].attr}"].append(
-                        Node(subnode, f"self.{subnode.targets[0].attr}", "list"))
+                    self.found[self.class_context + f".{subnode.targets[0].value.id}.{subnode.targets[0].attr}"].append(
+                        Node(subnode, f"{subnode.targets[0].value.id}.{subnode.targets[0].attr}", "list"))
                 else:
                     self.found[self.context + "." + subnode.targets[0].id].append(
                         Node(subnode, subnode.targets[0].id, "list"))
             elif isinstance(subnode, ast.For) and hasattr(subnode, "iter"):
                 if is_self(subnode.iter) and hasattr(subnode.iter, "attr"):
-                    self.found[self.class_context + f".self.{subnode.iter.attr}"].append(
-                        Node(subnode, f"self.{subnode.iter.attr}", "for"))
+                    self.found[self.class_context + f".{subnode.iter.value.id}.{subnode.iter.attr}"].append(
+                        Node(subnode, f"{subnode.iter.value.id}.{subnode.iter.attr}", "for"))
                 elif hasattr(subnode.iter, "id"):
                     self.found[self.context + "." + subnode.iter.id].append(Node(subnode, subnode.iter.id, "for"))
 
@@ -52,11 +52,12 @@ class Analysis:
             if isinstance(node, ast.ClassDef):
                 self.analyze_class(node)
             elif isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                self.context = self.class_context = "-module"
                 self.analyze_function(node)
             else:
                 outer_nodes.append(node)
         if outer_nodes:
-            self.context = "-module"
+            self.context = self.class_context = "-module"
             self.analyze_nodes(outer_nodes)
 
     def find_unnecessary(self):
